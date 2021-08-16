@@ -1,4 +1,4 @@
-# CLONALG-MMO
+# CLONALG-HMM
 
 Este projeto tem como finalidade a criação de um algoritmo para reconhecimento de padrões em proteínas. Para tanto, são utilizados os algorítmos da área da inteligência computacional: CLONALG (algoritmo imunológico) e MMO (Modelo Oculto de Markov).
 
