@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29020.237
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIS.ClonalgPR", "AIS.ClonalgPR\AIS.ClonalgPR.csproj", "{84133CDA-BD47-48D8-8B82-6DC35E612CDC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84133CDA-BD47-48D8-8B82-6DC35E612CDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84133CDA-BD47-48D8-8B82-6DC35E612CDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84133CDA-BD47-48D8-8B82-6DC35E612CDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84133CDA-BD47-48D8-8B82-6DC35E612CDC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FCE85A48-ED1E-4C7C-9FBC-AAFDF78E6E52}
+	EndGlobalSection
+EndGlobal
