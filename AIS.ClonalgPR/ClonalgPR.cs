@@ -16,7 +16,6 @@ namespace AIS.ClonalgPR
         private Result _results = new Result();
         private IDistance _distance = null;
         private List<Antigen> _antigens = new List<Antigen>();
-        private Stopwatch _watch = new Stopwatch();
         private TypeBioSequence _typeBioSequence;
         private int _antibodySize = 0;
 
@@ -179,8 +178,6 @@ namespace AIS.ClonalgPR
 
         public void Execute(int maximumIterations, double percentHighAffinity, double percentLowAffinity, int index = 0)
         {
-            StartTimer();
-
             var i = 1;
             var antibodies = Initialize();
             var numberHighAffinity = (int)Math.Round(percentHighAffinity * antibodies.Count());
@@ -198,11 +195,7 @@ namespace AIS.ClonalgPR
                 antibodies = Replace(selectedPopulation, numberLowAffinity);
                 i++;
             }
-
-            StopTimer();
-            SetStatistics(maximumIterations, percentHighAffinity, percentLowAffinity);
             SetMemoryCells();
-            SaveResult(index);
             SaveMemoryCells(index);
         }
 
@@ -212,96 +205,6 @@ namespace AIS.ClonalgPR
                 .Where(memoryCell => memoryCell.Sequence.Length > 0)
                 .ToList()
                 .ForEach(memoryCell => _memoryCellsStr.Add(new string(memoryCell.Sequence)));
-        }
-
-        private void SetStatistics(int maximumIterations, double percentHighAffinity, double percentLowAffinity)
-        {
-            if (_memoryCells == null || _memoryCells.Count() == 0) return;
-
-            var average = Average();
-            var variance = Variance();
-            var standardDeviation = StandardDeviation(variance);
-            var greaterAffinity = GreaterAffinity();
-            var time = GetTime();
-            // PrintResults(maximumIterations, average, variance, standardDeviation, greaterAffinity, time, percentHighAffinity, percentLowAffinity);
-            SetResult(average, variance, standardDeviation, maximumIterations, percentHighAffinity, percentLowAffinity, greaterAffinity, time);
-        }
-
-        private double Average()
-        {
-            return _memoryCells.Where(w => !double.IsNaN(w.Affinity) && !double.IsInfinity(w.Affinity)).Select(s => s.Affinity).Average();
-        }
-
-        private double Variance()
-        {
-            var variances = new List<double>();
-            var affinities = _memoryCells.Select(s => s.Affinity).ToList();
-            var average = Average();
-            var count = affinities.Count();
-            affinities.ForEach(affinity => variances.Add(Math.Pow(affinity - average, 2)));
-            return variances.Sum() / count;
-        }
-
-        private double StandardDeviation(double variance)
-        {
-            return Math.Sqrt(variance);
-        }
-
-        private double GreaterAffinity()
-        {
-            return _memoryCells.Select(s => s.Affinity).Max();
-        }
-
-        private void StartTimer()
-        {
-            _watch = Stopwatch.StartNew();
-        }
-
-        private void StopTimer()
-        {
-            _watch.Stop();
-        }
-
-        private double GetTime()
-        {
-            return _watch.Elapsed.TotalSeconds;
-        }
-
-        private void PrintResults(int maximumIterations, double average, double variance, double standardDeviation, double greaterAffinity, double seconds, double percentHighAffinity, double percentLowAffinity)
-        {
-            Console.WriteLine(string.Format("Iteração {0}", maximumIterations));
-            Console.WriteLine(string.Format("Média: {0}", average));
-            Console.WriteLine(string.Format("Variância: {0}", variance));
-            Console.WriteLine(string.Format("Desvio padrão: {0}", standardDeviation));
-            Console.WriteLine(string.Format("Maior afinidade: {0}", greaterAffinity));
-            Console.WriteLine(string.Format("Tempo: {0} (s)", seconds));
-            Console.WriteLine(string.Format("Limite baixa afinidade: {0}", percentLowAffinity));
-            Console.WriteLine(string.Format("Limite de alta afinidade: {0}", percentHighAffinity));
-            Console.WriteLine("");
-        }
-
-        private void SetResult(double average, double variance, double standardDeviation, int maximumIterations, double percentHighAffinity, double percentLowAffinity, double greaterAffinity, double seconds)
-        {
-            _results.Average = average;
-            _results.Variance = variance;
-            _results.StandardDeviation = standardDeviation;
-            _results.GreaterAffinity = greaterAffinity;
-            _results.MaximumIterations = maximumIterations;
-            _results.PercentHighAffinity = percentHighAffinity;
-            _results.PercentLowAffinity = percentLowAffinity;
-            _results.Time = seconds;
-        }
-
-        private void SaveResult(int index = 0)
-        {
-            if (_results.Average == 0) return;
-
-            var filePath = Path.Combine(Helpers.GetPath(), $"results{index}.json");
-            using (StreamWriter file = File.CreateText(filePath))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                serializer.Serialize(file, _results);
-            }
         }
 
         private void SaveMemoryCells(int index = 0)

@@ -3,6 +3,7 @@ using AIS.ClonalgPR.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -13,6 +14,10 @@ namespace AIS.ClonalgPR
     {
         private const int START_REGION_SPIKE_PROTEIN = 21300;
         private const int END_REGION_SPIKE_PROTEIN = 25400;
+        private const int MAXIMUM_ITERATIONS = 5000;
+        private static List<Result> Results = new List<Result>();
+        private static IEnumerable<string> Patterns = new List<string>();
+        private static Stopwatch _watch = new Stopwatch();
 
         private static List<Antigen> antigens = new List<Antigen>();
         private static TypeBioSequence TypeBioSequence
@@ -38,7 +43,7 @@ namespace AIS.ClonalgPR
         }
         private static List<string> PatternsProof
         {
-            get 
+            get
             {
                 return new List<string>() { "TAAA", "ATG", "TTT", "TCT", "GAT", "TGG", "ACT", "ATTTTG", "ATA", "CGCT", "CAA" };
             }
@@ -64,13 +69,20 @@ namespace AIS.ClonalgPR
 
             markov.Train();
 
-            for (int antibodySize = Constants.MIN_SIZE_ANTIBODY; antibodySize <= Constants.MAX_SIZE_ANTIBODY; antibodySize++)
+            for (int i = 0; i < 10; i++)
             {
-                var clonalgPR = new ClonalgPR(distance: markov, antigens: antigens, typeBioSequence: TypeBioSequence, antibodySize: antibodySize);
-                clonalgPR.Execute(maximumIterations: 1000, percentHighAffinity: 0.6, percentLowAffinity: 0.4);
+                StartTimer();
+                for (int antibodySize = Constants.MIN_SIZE_ANTIBODY; antibodySize <= Constants.MAX_SIZE_ANTIBODY; antibodySize++)
+                {
+                    var clonalgPR = new ClonalgPR(distance: markov, antigens: antigens, typeBioSequence: TypeBioSequence, antibodySize: antibodySize);
+                    clonalgPR.Execute(maximumIterations: MAXIMUM_ITERATIONS, percentHighAffinity: 0.9, percentLowAffinity: 0.1);
+                }
+                StopTimer();
+                ReadAllFiles(antigens.Count());                
+                SetStatistics();
             }
 
-            ReadAllFiles(antigens.Count());
+            PrintResults();
         }
         static void ExecuteMultiple(List<List<Antigen>> antigens)
         {
@@ -87,6 +99,34 @@ namespace AIS.ClonalgPR
             }
 
             ReadAllFiles(antigens.Count());
+        }
+
+
+        private static void StartTimer()
+        {
+            _watch = Stopwatch.StartNew();
+        }
+
+        private static void StopTimer()
+        {
+            _watch.Stop();
+        }
+
+        private static double GetTime()
+        {
+            return _watch.Elapsed.TotalSeconds;
+        }
+
+        private static void SetStatistics()
+        {
+            Results.Add(new Result() { MaximumIterations = MAXIMUM_ITERATIONS, Time = GetTime(), NumberOfPatterns = Patterns.Count() });
+        }
+
+        private static void PrintResults()
+        {
+            Console.WriteLine("Número de iterações: " + MAXIMUM_ITERATIONS);
+            Console.WriteLine("Tempo médio: " + Results.Average(result => result.Time));
+            Console.WriteLine("Número médio de padrões: " + Results.Average(result => result.NumberOfPatterns));
         }
 
         private static bool IsDNA()
@@ -321,14 +361,14 @@ namespace AIS.ClonalgPR
 
         private static void EvaluatePatterns(List<string> patterns)
         {
-            var intersection = patterns.Intersect(PatternsProof);
-            if (intersection.Count() == PatternsProof.Count())
-                Console.WriteLine("Foi possível encontrar todos os padrões!");
-            else if (intersection.Count() > 0)
-                Console.WriteLine($"Foi possível encontrar {intersection.Count()} de {PatternsProof.Count()} padrões!");
+            Patterns = patterns.Intersect(PatternsProof);
+            //if (Patterns.Count() == PatternsProof.Count())
+            //    Console.WriteLine("Foi possível encontrar todos os padrões!");
+            //else if (Patterns.Count() > 0)
+            //    Console.WriteLine($"Foi possível encontrar {Patterns.Count()} de {PatternsProof.Count()} padrões!");
 
-            Console.WriteLine("");
-            intersection.ToList().ForEach(pattern => Console.WriteLine(pattern));
+            //Console.WriteLine("");
+            //Patterns.ToList().ForEach(pattern => Console.WriteLine(pattern));
         }
 
         private static List<string> ReadSingleFile()
